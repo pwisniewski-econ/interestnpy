@@ -1,0 +1,20 @@
+DESCRIPTION AND DATA SOURCES:
+
+DFV: 
+	- Description:
+	- Source(s): https://data.cquest.org/dgfip_dvf/201904/
+
+GEOCOM:
+	- table_passage_annuelle_2023:
+		- Description:	Changes in town codes per year between Jan-2003 and Jan-2023 
+		- Source(s):	https://www.insee.fr/fr/information/2028028
+
+	- Intercommunalite_Metropole_au_01-01-2023:
+		- Description: 	List of town groups
+		- Source(s):	https://www.insee.fr/fr/information/2510634
+
+			
+TER:
+	- 1-Terrains-achetes-nombre-surface-et-prix-moyen-par-region.2021-01.csv
+		- Description: Terrain prices per region
+		- Source(s): https://www.statistiques.developpement-durable.gouv.fr/catalogue?page=dataset&datasetId=63b8281ec113d45936722df2
