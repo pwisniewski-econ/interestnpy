@@ -72,5 +72,5 @@ IMMO1423 = pd.concat([result[0] for result in results])
 IMMO1423_robust = pd.concat([result[1] for result in results])
   
 # Writing output
-feather.write_feather(IMMO1423, "data/interim/immo_panel_py.feather")
-feather.write_feather(IMMO1423_robust, "data/interim/immo_panel_robust_py.feather")
+feather.write_feather(IMMO1423, path+"/data/interim/immo_panel_py.feather")
+feather.write_feather(IMMO1423_robust, path+"/data/interim/immo_panel_robust_py.feather")
