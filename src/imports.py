@@ -71,7 +71,7 @@ IDENT1423_DF.to_feather(path+"/data/interim/tble_de_passage_py.feather")
 #LOADS CONVERSION TABLE REG - DEP
 DEPREG_DF = pd.read_excel(path+"/data/external/GEOCOM/table-appartenance-geo-communes-19.xls", 
                           sheet_name="COM", skiprows=5)[['DEP', 'REG']].drop_duplicates()
-DEPREG_DF['REG'] = str(DEPREG_DF['REG'])
+DEPREG_DF['REG'] = DEPREG_DF['REG'].astype(str)
 
 #LOADS REGIONAL PRICES FOR TERRAINS
 TER_DF = pd.read_csv(path+"/data/external/TER/1-Terrains-achetes-nombre-surface-et-prix-moyen-par-region.2021-01.csv", 
