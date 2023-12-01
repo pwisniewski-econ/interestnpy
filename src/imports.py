@@ -15,55 +15,93 @@ PASSAGE1423_DF = PASSAGE1423_DF.filter(regex='^CODGEO').iloc[:, :10]
 PASSAGE1423_DF = PASSAGE1423_DF[PASSAGE1423_DF['CODGEO_2023'].notna()]
 
 #IMPORTS 2023 EPCI DEFINITIONS
-EPCI_COM_DF = pd.read_excel(path+"/data/external/GEOCOM/Intercommunalite_Metropole_au_01-01-2023.xlsx", 
+FCOM_DF = pd.read_excel(path+"/data/external/GEOCOM/ZE2020_au_01-01-2023.xlsx", 
                             sheet_name="Composition_communale", skiprows=5)
 
-#CREATES IDENT BASED ON 2023 TOWN CODES AND IDENT_ROBUST BASED ON EPCI
-EPCI_COM_DF = EPCI_COM_DF.drop(columns=['DEP', 'REG'])
-EPCI_COM_DF['IDENT_ROBUST'] = EPCI_COM_DF.apply(
+EPC_COM = pd.read_excel(path+"/data/external/GEOCOM/Intercommunalite_Metropole_au_01-01-2023.xlsx", 
+                            sheet_name="Composition_communale", skiprows=5)
+
+FCOM_DF = pd.merge(FCOM_DF, EPC_COM, how='left', on=['CODGEO','LIBGEO', 'DEP', 'REG'])
+
+#CREATES COM BASED ON 2023 TOWN CODES AND ZE BASED ON EPCI
+FCOM_DF['COM'] = FCOM_DF['CODGEO']
+FCOM_DF['LIB_COM'] = FCOM_DF['LIBGEO']
+FCOM_DF['ZE'] = FCOM_DF['ZE2020']
+FCOM_DF['LIB_ZE'] = FCOM_DF['LIBZE2020']
+FCOM_DF['EPCI'] = FCOM_DF['ZE2020']
+FCOM_DF['LIB_ZE'] = FCOM_DF['LIBZE2020']
+FCOM_DF['EPCI'] = FCOM_DF.apply(
     lambda row: row['CODGEO'] if any(x in row['LIBEPCI'] for x in ["Métropole du Grand Paris", "Métropole de Lyon", "Métropole d'Aix-Marseille-Provence"]) else row['EPCI'],
     axis=1
 )
-EPCI_COM_DF['IDENT'] = EPCI_COM_DF['CODGEO']
-EPCI_COM_DF['LIB_IDENT_ROBUST'] = EPCI_COM_DF.apply(
+FCOM_DF['LIB_EPCI'] = FCOM_DF.apply(
     lambda row: row['LIBGEO'] if any(x in row['LIBEPCI'] for x in ["Métropole du Grand Paris", "Métropole de Lyon", "Métropole d'Aix-Marseille-Provence"]) else row['LIBEPCI'],
     axis=1
 )
-EPCI_COM_DF['LIB_IDENT_ROBUST'] = EPCI_COM_DF.apply(
-    lambda row: "Iles-FR" if row['EPCI'] == "ZZZZZZZZZ" else row['LIB_IDENT_ROBUST'],
+FCOM_DF['LIB_EPCI'] = FCOM_DF.apply(
+    lambda row: "Iles-FR" if row['EPCI'] == "ZZZZZZZZZ" else row['LIB_EPCI'],
     axis=1
 )
-EPCI_COM_DF['LIB_IDENT'] = EPCI_COM_DF['LIBGEO']
-EPCI_COM_DF.rename(columns={'CODGEO': 'CODGEO_2023'}, inplace=True)
-EPCI_COM_DF = EPCI_COM_DF[['CODGEO_2023', 'IDENT', 'LIB_IDENT', 'IDENT_ROBUST', 'LIB_IDENT_ROBUST']]
+FCOM_DF.rename(columns={'CODGEO': 'CODGEO_2023'}, inplace=True)
+FCOM_DF = FCOM_DF[['CODGEO_2023', 'COM', 'LIB_COM', 'ZE', 'LIB_ZE', 'EPCI', 'LIB_EPCI']]
 
 #MERGES WITH INSEE TABLE TO CREATE THE TRANSLATION TABLE 
-IDENT1423_DF = pd.merge(PASSAGE1423_DF, EPCI_COM_DF, how='left', on='CODGEO_2023')
+IDENT1423_DF = pd.merge(PASSAGE1423_DF, FCOM_DF, how='left', on='CODGEO_2023')
 
 #FIXES PROBLEMS RELATED TO CITIES WITH "ARRONDISSEMENTS"
-IDENT1423_DF['IDENT'] = IDENT1423_DF.apply(
-    lambda row: row['CODGEO_2023'] if pd.isna(row['IDENT']) else row['IDENT'],
+conditions_arr = [
+    IDENT1423_DF['CODGEO_2023'].str.startswith("75"),
+    IDENT1423_DF['CODGEO_2023'].str.startswith("132"),
+    IDENT1423_DF['CODGEO_2023'].str.startswith("6938")
+]
+
+ze_arr = [1109, 9312, 8421]
+lib_arr = ["Paris", "Marseille", "Lyon"]
+
+IDENT1423_DF['COM'] = IDENT1423_DF.apply(
+    lambda row: row['CODGEO_2023'] if pd.isna(row['COM']) else row['COM'],
     axis=1
 )
 
-IDENT1423_DF['IDENT_ROBUST'] = IDENT1423_DF.apply(lambda row: row['CODGEO_2023'] if pd.isna(row['IDENT_ROBUST']) else row['IDENT_ROBUST'], axis=1)
+IDENT1423_DF['EPCI'] = IDENT1423_DF.apply(
+    lambda row: row['CODGEO_2023'] if pd.isna(row['EPCI']) else row['EPCI'],
+    axis=1
+)
+
+IDENT1423_DF['ZE'] = np.select(
+  conditions_arr, 
+  ze_arr, 
+  default=IDENT1423_DF['ZE'])
 
 def create_lib_ident(row, col_name):
     if pd.isna(row[col_name]):
-        if row['IDENT'][:2] == "75":
-            return f"Paris {row['IDENT'][3:5]}"
-        elif row['IDENT'][:2] == "69":
+        if row['COM'][:2] == "75":
+            return f"Paris {row['COM'][3:5]}"
+        elif row['COM'][:2] == "69":
             return f"Lyon {int(row['CODGEO_2019']) - 80}"
-        elif row['IDENT'][:2] == "13":
-            return f"Marseille {row['IDENT'][3:5]}"
+        elif row['COM'][:2] == "13":
+            return f"Marseille {row['COM'][3:5]}"
     else:
         return row[col_name]
 
-IDENT1423_DF['LIB_IDENT'] = IDENT1423_DF.apply(create_lib_ident, col_name='LIB_IDENT', axis=1)
-IDENT1423_DF['LIB_IDENT_ROBUST'] = IDENT1423_DF.apply(create_lib_ident, col_name='LIB_IDENT_ROBUST', axis=1)
+IDENT1423_DF['LIB_COM'] = IDENT1423_DF.apply(create_lib_ident, col_name='LIB_COM', axis=1)
+
+IDENT1423_DF['LIB_EPCI'] = IDENT1423_DF.apply(
+    lambda row: row['LIB_COM'] if pd.isna(row['LIB_EPCI']) else row['LIB_EPCI'],
+    axis=1
+)
+
+IDENT1423_DF['EPCI'] = IDENT1423_DF['EPCI'].astype(str) 
+
+IDENT1423_DF['LIB_ZE'] = np.select(
+  conditions_arr, 
+  lib_arr, 
+  default=IDENT1423_DF['LIB_ZE'])
+
 
 #REORDERS AND EXPORTS THE TRANSLATION TABLE
-IDENT1423_DF = IDENT1423_DF[['IDENT', 'IDENT_ROBUST', 'LIB_IDENT', 'LIB_IDENT_ROBUST'] + [col for col in IDENT1423_DF.columns if col not in ['IDENT', 'IDENT_ROBUST', 'LIB_IDENT', 'LIB_IDENT_ROBUST']]]
+reord_cols = ['COM', 'ZE', 'LIB_COM', 'LIB_ZE', 'EPCI', 'LIB_EPCI']
+IDENT1423_DF = IDENT1423_DF[reord_cols + [col for col in IDENT1423_DF.columns if col not in reord_cols]]
 IDENT1423_DF.to_feather(path+"/data/interim/tble_de_passage_py.feather")
 
 #PART 2 - LOCAL TERRAIN PRICES

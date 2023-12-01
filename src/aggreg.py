@@ -13,7 +13,6 @@ def aggreg_fun(data, ID, LIB_ID):
   data = data.merge(quantiles, left_on=[ID, LIB_ID, 'Date', 'Type local'], right_index=True)
   filtered_data = data[(data['prixM2'] <= data['quantile_95']) & (data['prixM2'] >= data['quantile_05'])]
   print("filtered!")
-  # Further aggregation
   data_agreg = filtered_data.groupby([ID, LIB_ID,'Date']).agg(
      n_transactions=('prixM2', 'size'),
      prop_maison=('Type local', lambda x: np.mean(x == 'Maison')),
@@ -24,8 +23,7 @@ def aggreg_fun(data, ID, LIB_ID):
 def immo_prices(year):
   # Read data
   df = pd.read_csv(path+f"/data/external/DFV/valeursfoncieres-{year}.txt", delimiter="|", dtype=str)
-  df = df.dropna(axis=1, how='all')  # Equivalent to select_if in R
-
+  df = df.dropna(axis=1, how='all')  
   # Filter and mutate
   df = df[df['Nature mutation'] == "Vente"]
   df = df[df['Code type local'].isin(['1', '2'])]
@@ -40,7 +38,7 @@ def immo_prices(year):
   df['Date'] = pd.to_datetime(str(year) + df['qmonth'] + "01", format='%Y%m%d')
   print("ok-2")
   # Merging with IDENT_YEAR_DF
-  IDENT_YEAR_DF = IDENT_DF[['IDENT', 'IDENT_ROBUST', 'LIB_IDENT', 'LIB_IDENT_ROBUST', f'CODGEO_{year}']].drop_duplicates()
+  IDENT_YEAR_DF = IDENT_DF[['COM', 'EPCI', 'ZE', 'LIB_COM', 'LIB_EPCI', 'LIB_ZE', f'CODGEO_{year}']].drop_duplicates()
   df = df.merge(IDENT_YEAR_DF, left_on='depcom', right_on=f'CODGEO_{year}', how='left')
   print("ok-3")
   # Merging with TERDEP_DF
@@ -51,14 +49,15 @@ def immo_prices(year):
   df['prixM2'] = (df['Valeur fonciere'] - df['Surface terrain'] * df['PTM2_MED']) / df['Surface reelle bati'].astype(float)
   df = df[(df['prixM2'] > 10) & (df['prixM2'] < 100000)].drop_duplicates()
   print("ok-5")
-  # Further processing
-  df = df.drop_duplicates(subset=['Date mutation', 'No voie', 'Valeur fonciere', 'Surface terrain', 'LIB_IDENT'])
-  df4_robust = aggreg_fun(df,"IDENT_ROBUST","LIB_IDENT_ROBUST")
+  df = df.drop_duplicates(subset=['Date mutation', 'No voie', 'Valeur fonciere', 'Surface terrain', 'LIB_COM'])
+  df4_epci = aggreg_fun(df,"EPCI","LIB_EPCI")
   print("ok-6")
-  df4 = aggreg_fun(df,"IDENT", "LIB_IDENT")
+  df4_com = aggreg_fun(df,"COM", "LIB_COM")
   print("ok-7")
+  df4_ze = aggreg_fun(df,"ZE","LIB_ZE")
 
-  return [df4, df4_robust]
+
+  return [df4_com, df4_epci, df4_ze]
 
 
 years = ["2023", "2022", "2021", "2020", "2019", "2018", "2017", "2016", "2015", "2014"]
@@ -68,9 +67,12 @@ for i in years:
   results.append(immo_prices(i))
 
 # Merging results
-IMMO1423 = pd.concat([result[0] for result in results])
-IMMO1423_robust = pd.concat([result[1] for result in results])
-  
+IMMO1423_COM = pd.concat([result[0] for result in results])
+IMMO1423_EPCI = pd.concat([result[1] for result in results])
+IMMO1423_ZE = pd.concat([result[2] for result in results])
+
+
 # Writing output
-feather.write_feather(IMMO1423, path+"/data/interim/immo_panel_py.feather")
-feather.write_feather(IMMO1423_robust, path+"/data/interim/immo_panel_robust_py.feather")
+feather.write_feather(IMMO1423_COM, path+"/data/interim/immo_panel_com_py.feather")
+feather.write_feather(IMMO1423_EPCI, path+"/data/interim/immo_panel_epci_py.feather")
+feather.write_feather(IMMO1423_ZE, path+"/data/interim/immo_panel_ze_py.feather")
