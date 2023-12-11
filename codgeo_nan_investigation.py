@@ -1,27 +1,23 @@
+#Investigating NaN for CODGEO
+
 import pandas as pd
 import numpy as np
-import pyarrow.feather as feather
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-#path = "C:/Users/Patryk/Documents/GitHub/interestnpy"
 path = "C:/Users/rems9/Desktop/Travail/ENSAE/2A/projet_python/interestnpy"
+#CHANGE PATH AS NEEDED
+#year="2019"
+years = ["2023", "2022", "2021", "2020", "2019", "2018", "2017", "2016", "2015", "2014"]
+
+   
 
 TERDEP_DF = pd.read_feather(path+"/data/interim/terrains_py.feather")
 IDENT_DF = pd.read_feather(path+"/data/interim/tble_de_passage_py.feather").drop_duplicates()
 
-def aggreg_fun(data, ID, LIB_ID):
-  quantiles = data.groupby([ID, LIB_ID, 'Date', 'Type local'])['prixM2'].quantile([0.05, 0.95]).unstack()
-  quantiles.columns = ['quantile_05', 'quantile_95']
-  data = data.merge(quantiles, left_on=[ID, LIB_ID, 'Date', 'Type local'], right_index=True)
-  filtered_data = data[(data['prixM2'] <= data['quantile_95']) & (data['prixM2'] >= data['quantile_05'])]
-  print("filtered!")
-  data_agreg = filtered_data.groupby([ID, LIB_ID,'Date']).agg(
-     n_transactions=('prixM2', 'size'),
-     prop_maison=('Type local', lambda x: np.mean(x == 'Maison')),
-    prixM2=('prixM2', 'median')
-  ).reset_index()
-  return data_agreg
-  
-def immo_prices(year):
+
+#This a troncated version of the immo_prices function (see the agreg.py file for the full version) to search for nan in CODGEO
+def NaNimmo_prices(year):
   # Read data
   df = pd.read_csv(path+f"/data/external/DFV/valeursfoncieres-{year}.txt", delimiter="|", dtype=str)
   df = df.dropna(axis=1, how='all')  
@@ -51,29 +47,32 @@ def immo_prices(year):
   df = df[(df['prixM2'] > 10) & (df['prixM2'] < 100000)].drop_duplicates()
   print("ok-5")
   df = df.drop_duplicates(subset=['Date mutation', 'No voie', 'Valeur fonciere', 'Surface terrain', 'LIB_COM'])
-  df4_epci = aggreg_fun(df,"EPCI","LIB_EPCI")
-  print("ok-6")
-  df4_com = aggreg_fun(df,"COM", "LIB_COM")
-  print("ok-7")
-  df4_ze = aggreg_fun(df,"ZE","LIB_ZE")
+  return df
 
 
-  return [df4_com, df4_epci, df4_ze]
 
 
-years = ["2023", "2022", "2021", "2020", "2019", "2018", "2017", "2016", "2015", "2014"]
-results = []
 
-for i in years:
-  results.append(immo_prices(i))
+CODGEO_year = [(lambda x : "CODGEO_" +x)(x)for x in years]
+nan_years = [(lambda x : "nan_" +x)(x)for x in years]
+dataframes= {} #this dictionnary will store dataframes with 2 columns : Commune and the number of nan for codgeo in the commune for a specific year
 
-# Merging results
-IMMO1423_COM = pd.concat([result[0] for result in results])
-IMMO1423_EPCI = pd.concat([result[1] for result in results])
-IMMO1423_ZE = pd.concat([result[2] for result in results])
+for i in nan_years:
+    nan_year = i
+    df = NaNimmo_prices(nan_year[4:8])
+    i = df[["Commune","CODGEO_" + nan_year[4:8]]]
+    i = i[pd.isna(i["CODGEO_" + nan_year[4:8]])==True] #keeping only lines with na for codgeo
+    i = i[["Commune"]].value_counts() #counts the number of nan for each commune
+    #i.columns = ["Commune", nan_year[4:8] + "Number_NaN"]
+    t= nan_year[4:8] + "_Number_NaN"
+    dataframes[nan_year] = i #put the dataframe in the dictionnary
 
 
-# Writing output
-feather.write_feather(IMMO1423_COM, path+"/data/interim/immo_panel_com_py.feather")
-feather.write_feather(IMMO1423_EPCI, path+"/data/interim/immo_panel_epci_py.feather")
-feather.write_feather(IMMO1423_ZE, path+"/data/interim/immo_panel_ze_py.feather")
+for z in dataframes:
+   print(f"Number of commune with nan for CODGEO in {z[4:8]} : {dataframes[z].size}, total number transactions with nan for CODGEO this year : {sum(dataframes[z][:])}")
+
+
+#for z in dataframes:
+   #print(dataframes[z]) #print commune and associated number of nan for codgeo for each year
+
+

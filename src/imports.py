@@ -3,7 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-path = "C:/Users/Patryk/Documents/GitHub/interestnpy"
+#path = "C:/Users/Patryk/Documents/GitHub/interestnpy"
+path = "C:/Users/rems9/Desktop/Travail/ENSAE/2A/projet_python/interestnpy"
 #CHANGE PATH AS NEEDED
 
 #PART 1 - TRANSLATION TABLE:
