@@ -30,7 +30,28 @@ income2014_2019 = income2014_2019[["CODGEO","LIBGEO","Q114","Q214","Q314","GI14"
 
 #ADD column Mediane_evol_diff to observe the evolution of available income between 2019 and 2019
 income2014_2019["Mediane_evol_diff"] = income2014_2019["Q219"] - income2014_2019["Q214"]
+income2014_2019["CODGEO"] = income2014_2019["CODGEO"].astype(str) #preventive bug correction
+
+#IMPORT POPULATION AND SURFACE
+#source https://www.insee.fr/fr/statistiques/3698339
+#source https://www.insee.fr/fr/statistiques/2521169
+population = pd.read_excel(path+"/data/external/pop_density/base-pop-historiques-1876-2020.xlsx", 
+                               sheet_name="pop_1876_2020", skiprows=5)
+population = population[["CODGEO","PMUN14","PMUN19"]]
 
 
-#IMPORT POPULATION DENSITY
+surface = pd.read_csv(path+"/data/external/pop_density/base_cc_comparateur.csv", sep=';')
+surface = surface[["CODGEO","SUPERF"]]
+surface["CODGEO"] = surface["CODGEO"].astype(str) #bug correction
+#MERGE
+densite = pd.merge(population,surface,how="inner",on=["CODGEO"])
 
+#create popdensity2014 and popdensity2019 : population/surface
+densite["popdensity2014"] = densite["PMUN14"] / densite["SUPERF"]
+densite["popdensity2019"] = densite["PMUN19"] / densite["SUPERF"]
+densite = densite[["CODGEO","popdensity2014","popdensity2019"]]
+densite["CODGEO"] = densite["CODGEO"].astype(str) #preventive bug correction
+
+
+#MERGE INCOME2014_2019 AND DENSITE
+control_var = pd.merge(income2014_2019,densite,how="inner",on=["CODGEO"])
