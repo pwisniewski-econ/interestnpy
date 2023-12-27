@@ -136,3 +136,40 @@ plt.xlabel("Quarter")
 plt.ylabel("")
 plt.legend(title="Region")
 plt.show()
+
+#INFLATION TABLE
+inflation = pd.read_excel(path+"/data/external/INFLATION/econ-gen-taux-inflation.xlsx", 
+                          sheet_name="Données", skiprows=3, nrows=9)
+inflation.rename(columns={"Année": "AN", "Taux d'inflation": "INFLATION"}, inplace=True)
+inflation['AN'] = inflation['AN'].astype(str)
+inflation = inflation._append({'AN': str(2023), 'INFLATION': 5.8}, ignore_index=True)
+#Why 2.1? BDF predictions.
+#either way it does not matter as we will work in basis 2023
+inflation.sort_values(by="AN", inplace=True)
+inflation['TOT'] = (1 + inflation['INFLATION'] / 100).cumprod()
+inflation['BASE14'] = inflation['TOT'] / inflation['TOT'].iloc[0]
+inflation['BASE23'] = inflation['BASE14'] / inflation['BASE14'].iloc[9]
+
+inflation.to_feather(path+"/data/interim/inflation.feather")
+
+# INTEREST RATES TABLE
+interest_rates = pd.read_excel(path+"/data/external/INFLATION/series_panorama_202309.xlsx", 
+                               sheet_name="G3", 
+                               skiprows=6, 
+                               names=["Date", "ir", "ir10_avg", "ir20_avg"])
+
+interest_rates = interest_rates[interest_rates['Date'] > '2013-12-31']
+
+interest_rates['quarter'] = interest_rates['Date'].dt.to_period('Q').astype(str)
+interest_rates = interest_rates.groupby('quarter').agg({'ir': 'mean'}).reset_index()
+
+def get_month_from_quarter(quarter):
+    quarter_num = quarter.split("Q")[1]
+    return {'1': '01', '2': '04', '3': '07', '4': '10'}.get(quarter_num, None)
+
+interest_rates['themonth'] = interest_rates['quarter'].apply(get_month_from_quarter)
+interest_rates['Date'] = (interest_rates['quarter'].str[:4] + interest_rates['themonth'] + "01")
+interest_rates = interest_rates[['Date', 'ir']]
+
+interest_rates.to_feather(path+"/data/interim/interest_rates.feather")
+
