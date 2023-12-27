@@ -48,7 +48,6 @@ def plot_time_series(data, x, y, title, hue=None):
     sns.set_theme(style="whitegrid")
     plt.figure(figsize=(10, 6))
     sns.lineplot(data=data, x=x, y=y, hue=hue)
-    plt.legend(title=hue, loc='upper left', bbox_to_anchor=(1, 1))
     plt.title(title)
     plt.show()
 
