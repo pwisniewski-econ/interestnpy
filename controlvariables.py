@@ -40,7 +40,7 @@ population = pd.read_excel(path+"/data/external/pop_density/base-pop-historiques
 population = population[["CODGEO","PMUN14","PMUN19"]]
 
 
-surface = pd.read_csv(path+"/data/external/pop_density/base_cc_comparateur.csv", sep=';')
+surface = pd.read_excel(path+"/data/external/pop_density/base_cc_comparateur.xlsx",sheet_name="COM",skiprows=5) #IF NOT RUNNING SAVE THE EXCEL FILE AND IT WILL WORK
 surface = surface[["CODGEO","SUPERF"]]
 surface["CODGEO"] = surface["CODGEO"].astype(str) #bug correction
 #MERGE
