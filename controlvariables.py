@@ -55,3 +55,14 @@ densite["CODGEO"] = densite["CODGEO"].astype(str) #preventive bug correction
 
 #MERGE INCOME2014_2019 AND DENSITE
 control_var = pd.merge(income2014_2019,densite,how="inner",on=["CODGEO"])
+
+
+#IMPORT PHYSICISTS accessibility
+#source https://data.drees.solidarites-sante.gouv.fr/explore/dataset/530_l-accessibilite-potentielle-localisee-apl/information/
+physicist = pd.read_excel(path+"/data/external/physicist/Indicateur d'accessibilité potentielle localisée (APL) aux médecins généralistes.xlsx",sheet_name="APL_2019", skiprows=8)
+physicist= physicist[["Code commune INSEE","APL aux médecins généralistes de moins de 65 ans"]]
+#renaming variables 
+physicist = physicist.rename(columns ={"Code commune INSEE": "CODGEO", "APL aux médecins généralistes de moins de 65 ans" : "Physicist_access"})
+
+#MERGE
+control_var = pd.merge(control_var,physicist,how="inner",on="CODGEO")
