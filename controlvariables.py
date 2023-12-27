@@ -66,3 +66,33 @@ physicist = physicist.rename(columns ={"Code commune INSEE": "CODGEO", "APL aux 
 
 #MERGE
 control_var = pd.merge(control_var,physicist,how="inner",on="CODGEO")
+
+#IMPORT CRIMINALITY
+#source https://www.data.gouv.fr/fr/datasets/bases-statistiques-communale-et-departementale-de-la-delinquance-enregistree-par-la-police-et-la-gendarmerie-nationales/#/resources
+criminality = pd.read_csv(path+"/data/external/criminality/donnee-data.gouv-2022-geographie2023-produit-le2023-07-17.csv",sep=";")
+criminality = criminality.rename(columns = {"CODGEO_2023":"CODGEO"})
+#For year 2019
+criminality19 = criminality[criminality["annee"].isin([19])]
+
+burglary19 = criminality19[criminality19["classe"].isin(["Cambriolages de logement"])] #around 70% of Nan in the column tauxpourmille
+burglary19 = burglary19[["CODGEO","tauxpourmille"]]
+burglary19 = burglary19.rename(columns = {"tauxpourmille":"burglary_for_1000"})
+
+
+otherassault19 = criminality19[criminality19["classe"].isin(["Autres coups et blessures volontaires"])] #around 45% of Nan in the column faits (number of occurence)
+otherassault19= otherassault19[["CODGEO","faits"]]
+otherassault19 = otherassault19.rename(columns = {"faits":"other_assault"})
+
+assault19 = criminality19[criminality19["classe"].isin(["Coups et blessures volontaires"])] #around 60% of Nan in the column faits (number of occurence)
+assault19= assault19[["CODGEO","faits"]]
+assault19 = assault19.rename(columns = {"faits":"assault"})
+
+destruction19 = criminality19[criminality19["classe"].isin(["Destructions et dégradations volontaires"])] #around 70% of Nan in the column faits (number of occurence)
+destruction19 = destruction19[["CODGEO","faits"]]
+destruction19 = destruction19.rename(columns = {"faits":"destruction"})
+
+#MERGE WITH control_var
+control_var = pd.merge(control_var,burglary19,how="left",on="CODGEO")
+control_var = pd.merge(control_var,assault19,how="left",on="CODGEO")
+control_var = pd.merge(control_var,otherassault19,how="left",on="CODGEO")
+control_var = pd.merge(control_var,destruction19,how="left",on="CODGEO")
