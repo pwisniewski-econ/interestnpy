@@ -3,13 +3,30 @@ import numpy as np
 import pyarrow.feather as feather
 
 #CHANGE PATH AS NEEDED
-path = "C:/Users/rems9/Desktop/Travail/ENSAE/2A/projet_python/interestnpy"
+path = "C:/Users/patry/Documents/GitHub/interestnpy"
 
 #IMPORT UNEMPLOYMENT DATA
 #source https://www.insee.fr/fr/statistiques/1893230
 unemployement = pd.read_excel(path+"/data/external/unemployment/chomage-zone-t1-2003-t3-2023.xlsx", 
                                sheet_name="txcho_ze", skiprows=5)
 
+unemployement_long = pd.melt(unemployement, id_vars=['ZE2020', 'LIBZE2020', 'REG', 'LIBREG'],
+                             var_name='Date', value_name='UNEMP')
+
+def transform_date(date):
+    if date.endswith('-T1'):
+        return date[:4] + '0101'
+    elif date.endswith('-T2'):
+        return date[:4] + '0401'
+    elif date.endswith('-T3'):
+        return date[:4] + '0701'
+    elif date.endswith('-T4'):
+        return date[:4] + '1001'
+    else:
+        return pd.NA
+
+unemployement_long['Date'] = unemployement_long['Date'].apply(transform_date)
+unemployement_long = unemployement_long[pd.to_numeric(unemployement_long['Date'], errors='coerce') > 20131231]
 
 
 #IMPORT AVAILABLE INCOME DATA  
@@ -29,7 +46,7 @@ income2014_2019 = pd.merge(income2014, income2019, how='inner', on = ["CODGEO","
 income2014_2019 = income2014_2019[["CODGEO","LIBGEO","Q114","Q214","Q314","GI14","Q119","Q219","Q319","GI19"]]
 
 #ADD column Mediane_evol_diff to observe the evolution of available income between 2019 and 2019
-income2014_2019["Mediane_evol_diff"] = income2014_2019["Q219"] - income2014_2019["Q214"]
+income2014_2019["med_change"] = income2014_2019["Q219"]/income2014_2019["Q214"]
 income2014_2019["CODGEO"] = income2014_2019["CODGEO"].astype(str) #preventive bug correction
 
 #IMPORT POPULATION AND SURFACE
@@ -66,3 +83,8 @@ physicist = physicist.rename(columns ={"Code commune INSEE": "CODGEO", "APL aux 
 
 #MERGE
 control_var = pd.merge(control_var,physicist,how="inner",on="CODGEO")
+
+
+# Writing output
+feather.write_feather(control_var, path+"/data/interim/TI_controls.feather")
+feather.write_feather(unemployement_long, path+"/data/interim/TV_controls.feather")
