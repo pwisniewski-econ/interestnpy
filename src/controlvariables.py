@@ -85,8 +85,8 @@ physicist = physicist.rename(columns ={"Code commune INSEE": "CODGEO", "APL aux 
 control_var = pd.merge(control_var,physicist,how="inner",on="CODGEO")
 
 #IMPORT CRIMINALITY
-#source https://www.data.gouv.fr/fr/datasets/bases-statistiques-communale-et-departementale-de-la-delinquance-enregistree-par-la-police-et-la-gendarmerie-nationales/#/resources
-criminality = pd.read_csv(path+"/data/external/criminality/donnee-data.gouv-2022-geographie2023-produit-le2023-07-17.csv",sep=";")
+#source (not compressed version) https://www.data.gouv.fr/fr/datasets/bases-statistiques-communale-et-departementale-de-la-delinquance-enregistree-par-la-police-et-la-gendarmerie-nationales/#/resources
+criminality = pd.read_csv(path+"/data/external/criminality/donnee-data.gouv-2022-geographie2023-produit-le2023-07-17.csv",sep=",")
 criminality = criminality.rename(columns = {"CODGEO_2023":"CODGEO"})
 #For year 2019
 criminality19 = criminality[criminality["annee"].isin([19])]
