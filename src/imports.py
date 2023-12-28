@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.linear_model import LinearRegression
 
-path = "C:/Users/Patryk/Documents/GitHub/interestnpy"
+path = "C:/Users/patry/Documents/GitHub/interestnpy"
 #CHANGE PATH AS NEEDED
 
 #PART 1 - TRANSLATION TABLE:
@@ -105,25 +105,22 @@ reord_cols = ['COM', 'ZE', 'LIB_COM', 'LIB_ZE', 'EPCI', 'LIB_EPCI']
 IDENT1423_DF = IDENT1423_DF[reord_cols + [col for col in IDENT1423_DF.columns if col not in reord_cols]]
 IDENT1423_DF.to_feather(path+"/data/interim/tble_de_passage_py.feather")
 
-#PART 2 - LOCAL TERRAIN PRICES
+#PART 2 - LOCAL LAND PRICES
 
 #LOADS CONVERSION TABLE REG - DEP
 DEPREG_DF = pd.read_excel(path+"/data/external/GEOCOM/table-appartenance-geo-communes-19.xls", 
                           sheet_name="COM", skiprows=5)[['DEP', 'REG']].drop_duplicates()
 DEPREG_DF['REG'] = DEPREG_DF['REG'].astype(str)
 
-#LOADS REGIONAL PRICES FOR TERRAINS
-TER_DF = pd.read_csv(path+"/data/external/TER/1-Terrains-achetes-nombre-surface-et-prix-moyen-par-region.2021-01.csv", 
+#LOADS REGIONAL PRICES FOR LAND
+TER_DF = pd.read_csv(path+"/data/external/TER/1-Terrains-achetes-nombre-surface-et-prix-moyen-par-region.2022-01.csv", 
                      delimiter=";", skiprows=1, escapechar='\\', skipinitialspace=True)
 
-#CREATING ADDITIONAL CONSTANT VALUES FOR 2014, 2022, and 2023
-additional_rows_2014 = TER_DF[TER_DF['ANNEE'] == 2015].copy()
-additional_rows_2014['ANNEE'] = 2014
-additional_rows_2022_2023 = TER_DF[TER_DF['ANNEE'] == 2021].copy()
-additional_rows_2022_2023['ANNEE'] = 2022
-additional_rows_2023 = additional_rows_2022_2023.copy()
+#CREATING ADDITIONAL CONSTANT VALUES FOR 2023
+additional_rows_2023 = TER_DF[TER_DF['ANNEE'] == 2022].copy()
 additional_rows_2023['ANNEE'] = 2023
-TER_DF = pd.concat([additional_rows_2014, TER_DF, additional_rows_2022_2023, additional_rows_2023]).sort_values('ANNEE')
+TER_DF = pd.concat([additional_rows_2014, TER_DF, additional_rows_2023]).sort_values('ANNEE')
+TER_DF = TER_DF[TER_DF['ANNEE'] > 2013]
 
 #MERGES TO GO FROM REGIONAL LEVEL TO DEPARTMENT LEVEL AND EXPORTS
 TERDEP_DF = pd.merge(DEPREG_DF, TER_DF, left_on='REG', right_on='ZONE_CODE', how='left')
