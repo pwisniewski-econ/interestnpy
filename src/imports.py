@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.linear_model import LinearRegression
 
 path = "C:/Users/Patryk/Documents/GitHub/interestnpy"
 #CHANGE PATH AS NEEDED
@@ -142,15 +143,14 @@ inflation = pd.read_excel(path+"/data/external/INFLATION/econ-gen-taux-inflation
                           sheet_name="Données", skiprows=3, nrows=9)
 inflation.rename(columns={"Année": "AN", "Taux d'inflation": "INFLATION"}, inplace=True)
 inflation['AN'] = inflation['AN'].astype(str)
-inflation = inflation._append({'AN': str(2023), 'INFLATION': 5.8}, ignore_index=True)
-#Why 2.1? BDF predictions.
+inflation = inflation._append({'AN': str(2023), 'INFLATION': 2.3}, ignore_index=True)
+#Why 2.3? first 3 months inflation
 #either way it does not matter as we will work in basis 2023
 inflation.sort_values(by="AN", inplace=True)
-inflation['TOT'] = (1 + inflation['INFLATION'] / 100).cumprod()
-inflation['BASE14'] = inflation['TOT'] / inflation['TOT'].iloc[0]
-inflation['BASE23'] = inflation['BASE14'] / inflation['BASE14'].iloc[9]
-
-inflation.to_feather(path+"/data/interim/inflation.feather")
+inflation['Date'] = inflation['AN']+"0101"
+inflation.loc[len(inflation)] = ["2023",0, "20230401"]
+inflation['TOT'] = (1 + inflation['INFLATION'].shift(1) / 100).cumprod()
+inflation['TOT'] = inflation['TOT'].fillna(1)
 
 # INTEREST RATES TABLE
 interest_rates = pd.read_excel(path+"/data/external/INFLATION/series_panorama_202309.xlsx", 
@@ -171,5 +171,10 @@ interest_rates['themonth'] = interest_rates['quarter'].apply(get_month_from_quar
 interest_rates['Date'] = (interest_rates['quarter'].str[:4] + interest_rates['themonth'] + "01")
 interest_rates = interest_rates[['Date', 'ir']]
 
-interest_rates.to_feather(path+"/data/interim/interest_rates.feather")
+# Combine inflation and interest rates
+irflation = pd.merge(interest_rates, inflation, on='Date', how='left')
+irflation = irflation.interpolate(method="slinear", fill_value="extrapolate", limit_direction="both")
+irflation['BASE14'] = irflation['TOT'] / irflation['TOT'].iloc[0]
+irflation['BASE23'] = irflation['BASE14'] / irflation['BASE14'].iloc[37]
+irflation.to_feather(path+"/data/interim/irflation.feather")
 
