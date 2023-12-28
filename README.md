@@ -26,7 +26,7 @@ The primary goal is to analyze the dynamic determinants of municipal real estate
 ## Tools and Technologies
 
 -   **Python**: The entire project is developed using Python, leveraging its powerful libraries for data analysis, data viz, and econometrics.
--   **Libraries**: Key Python libraries used include pandas for data manipulation, NumPy for numerical computations, Matplotlib and Seaborn for data visualization. The project also uses pyarrow to make use of the .feather file format, openpyxl and xlrd to read excel files very commonly used in data from ministries. 
+-   **Libraries**: Key Python libraries used include pandas for data manipulation, NumPy for numerical computations, scikitlearn for regressions, Matplotlib and Seaborn for data visualization. The project also uses pyarrow to make use of the .feather file format, openpyxl and xlrd to read excel files very commonly used in data from ministries. 
 
 ## Structure of the Repository
  `data/`, `src/`, etc..]
