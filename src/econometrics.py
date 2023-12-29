@@ -32,6 +32,7 @@ def group_and_calculate_diff(df, group_cols):
     df['prixM2_FE'] = grouped['prixM2'].transform(lambda x: x - x.mean()) #Within transformation
     df['year'] = df['Date'].str[:4]
     df['diff2_prop_maison'] = grouped['prop_maison'].diff().fillna(np.nan)
+    df['diff_ir'] = grouped['ir'].diff().fillna(np.nan)
     df['lag_ir'] = grouped['ir'].shift(1)
     df['lag2_ir'] = grouped['ir'].shift(2)
     df['lag4_ir'] = grouped['ir'].shift(4)
@@ -106,7 +107,9 @@ immo_reg_epci = merge_and_transform(immo_epci, irflation, control_epci, 'EPCI')
 immo_reg_epci_diff = group_and_calculate_diff(immo_reg_epci, ['EPCI', 'LIB_EPCI'])
 
 # Granger Causality Test
-granger_test3 = grangercausalitytests(immo_reg_com[['prixM2', 'ir']], maxlag=5, verbose=True)
+for i in ["Paris 14","Clermont-Ferrand","Le Grau-du-Roi", "Cagnes-sur-Mer", "Savigny-sur-Orge"]:
+  print(i)
+  granger_test3 = grangercausalitytests(immo_reg_com_diff[immo_reg_com_diff["LIB_COM"]==i][['diff_prixM2', 'diff_ir']].dropna(), maxlag=5, verbose=True)
 
 # Hausman test
 immo_reg_com_diff['Date'] = pd.to_datetime(immo_reg_com_diff['Date'], format='%Y%m%d')
@@ -149,8 +152,8 @@ plt.ylabel('Density')
 plt.show()
   
 # Model 1c
-model1c_formula = 'prixM2 ~ lag_ir * (popdensity2019 + med_change + Physicist_access + Q219 + prop_maison + assault_for_1000 + dens_change) + C(year)'
-mod1c = run_regression(immo_reg_com_diff, model1b_formula)
+model1c_formula = 'np.log(prixM2) ~ lag_ir * (popdensity2019 + med_change + Physicist_access + Q219 + prop_maison + assault_for_1000 + dens_change) + C(year)'
+mod1c = run_regression(immo_reg_com_diff, model1c_formula)
 
 test_breuschpagan = het_breuschpagan(mod1c.resid,  mod1c.model.exog)
 test_breuschpagan
