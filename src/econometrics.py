@@ -28,7 +28,7 @@ def group_and_calculate_diff(df, group_cols):
     df = df.sort_values(by=group_cols + ['Date'])
     grouped = df.groupby(group_cols)
     df['diff_prixM2'] = grouped['prixM2'].diff().fillna(np.nan)
-    df['diff2_prixM2'] = grouped['prixM2'].diff().diff()
+    df['diff2_prixM2'] = grouped['prixM2'].diff().diff().fillna(np.nan)
     df['prixM2_FE'] = grouped['prixM2'].transform(lambda x: x - x.mean()) #Within transformation
     df['year'] = df['Date'].str[:4]
     df['diff2_prop_maison'] = grouped['prop_maison'].diff().fillna(np.nan)
@@ -88,7 +88,7 @@ immo_reg_com_diff = group_and_calculate_diff(immo_reg_com, ['COM'])
 
 # Total 
 immo_reg_corr =immo_reg_com_diff[["prixM2", "ir","lag_ir","lag2_ir","lag4_ir","popdensity2019", "med_change", "Physicist_access", "Q219", "prop_maison", "assault_for_1000", "dens_change"]].dropna().corr()
-corplot(immo_reg_corr)
+corplot(immo_reg_corr, "Total")
 
 # Intra villes
 for i in ["Paris 14","Clermont-Ferrand","Le Grau-du-Roi"]:
@@ -98,6 +98,7 @@ for i in ["Paris 14","Clermont-Ferrand","Le Grau-du-Roi"]:
 immo_reg_ze = merge_and_transform(immo_ze, irflation, control_ze, 'ZE')
 immo_reg_ze_diff = group_and_calculate_diff(immo_reg_ze, ['ZE', 'LIB_ZE'])
 immo_reg_ze_diff = immo_reg_ze_diff.merge(unemployment[['ZE2020', 'Date', 'UNEMP']], left_on=['ZE', 'Date'], right_on=['ZE2020', 'Date'], how='left')
+immo_reg_ze_diff['lag_UNEMP'] = immo_reg_ze_diff.groupby(['ZE', 'LIB_ZE'])['UNEMP'].shift(1)
 immo_reg_ze_diff['diff2_lag_unemp'] = immo_reg_ze_diff.groupby(['ZE', 'LIB_ZE'])['UNEMP'].shift().diff().diff()
 
 # Processing for immo_reg_epci
@@ -187,48 +188,13 @@ plt.show()
 
 # Part 4: Linear Regression Models
 # Model mod3
-mod3_formula = 'prixM2_FE ~ lag_ir * (popdensity2019 + med_change + Physicist_access + Q219 + prop_maison + assault_for_1000 + dens_change) + prop_maison + C(year)'
+mod3_formula = 'prixM2_FE ~ lag_ir * (popdensity2019 + med_change + Physicist_access + Q219 + prop_maison + assault_for_1000 + dens_change+lag_UNEMP) + prop_maison + C(year)'
 mod3 = run_regression(immo_reg_ze_diff, mod3_formula)
 
 test_breuschpagan = het_breuschpagan(mod3.resid,  mod3.model.exog)
 test_breuschpagan
 
 mod3.get_robustcov_results(cov_type='HC2').summary()
-
-def adf_test_panel(data, column, panel_id):
-    p_values = []
-    for id in data[panel_id].unique():
-        panel_data = data[data[panel_id] == id][column].dropna()
-        if len(panel_data) > 0:
-            result = adfuller(panel_data)
-            p_values.append(result[1])  # p-value of the test
-    return p_values
-
-p_values = pd.DataFrame(adf_test_panel(immo_reg_ze_diff.sort_values(by=["ZE"] + ['Date']), 'diff_prixM2', 'ZE'),columns=['pval'])
-p_values[p_values["pval"]>0.05]
-p_values = pd.DataFrame(adf_test_panel(immo_reg_ze_diff.sort_values(by=["ZE"] + ['Date']), 'diff2_prixM2', 'ZE'),columns=['pval'])
-p_values[p_values["pval"]>0.05]
-
-for i in ["Paris","Clermont-Ferrand","Briançon"]:
-  plot_data = immo_reg_ze_diff[immo_reg_ze_diff["LIB_ZE"]==i]
-  plot_data['Date'] = pd.to_datetime(plot_data['Date'], format='%Y%m%d')
-  plot_data_melted = plot_data.melt(id_vars='Date', value_vars=['prixM2', 'diff_prixM2', 'diff2_prixM2'])
-  plt.figure(figsize=(10, 6))
-  sns.lineplot(data=plot_data_melted, x='Date', y='value', hue='variable')
-  plt.title("Étude stationarité zone d'emploi "+i)
-  plt.xlabel("Date")
-  plt.ylabel("Value")
-  plt.legend(title='Variable')
-  plt.show()
-
-# Model mod4
-mod4_formula = 'diff2_prixM2 ~ diff2_lag_ir * diff2_lag_unemp + C(year)'
-mod4 = run_regression(immo_reg_ze_diff, mod4_formula)
-
-test_breuschpagan = het_breuschpagan(mod4.resid,  mod4.model.exog)
-test_breuschpagan
-
-mod4.get_robustcov_results(cov_type='HC2').summary()
 
 # Model mod5
 mod5_formula = 'prixM2_FE ~ lag_ir * (popdensity2019 + med_change + Physicist_access + Q219 + prop_maison + assault_for_1000 + dens_change) + prop_maison + C(year)'
