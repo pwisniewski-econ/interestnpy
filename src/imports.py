@@ -119,7 +119,7 @@ TER_DF = pd.read_csv(path+"/data/external/TER/1-Terrains-achetes-nombre-surface-
 #CREATING ADDITIONAL CONSTANT VALUES FOR 2023
 additional_rows_2023 = TER_DF[TER_DF['ANNEE'] == 2022].copy()
 additional_rows_2023['ANNEE'] = 2023
-TER_DF = pd.concat([additional_rows_2014, TER_DF, additional_rows_2023]).sort_values('ANNEE')
+TER_DF = pd.concat([TER_DF, additional_rows_2023]).sort_values('ANNEE')
 TER_DF = TER_DF[TER_DF['ANNEE'] > 2013]
 
 #MERGES TO GO FROM REGIONAL LEVEL TO DEPARTMENT LEVEL AND EXPORTS
