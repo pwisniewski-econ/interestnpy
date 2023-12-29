@@ -63,7 +63,8 @@ def cor_ville(df, nom):
 
 
 # Reading Data
-base_path = "C:/Users/patry/Documents/GitHub/interestnpy/data/interim/"
+base_path = "C:/Users/rems9/Desktop/Travail/ENSAE/2A/projet_python/interestnpy/data/interim/"
+#base_path = "C:/Users/patry/Documents/GitHub/interestnpy/data/interim/"
 immo_epci = pd.read_feather(base_path + "immo_panel_epci_py.feather")
 immo_ze = pd.read_feather(base_path + "immo_panel_ze_py.feather")
 immo_com = pd.read_feather(base_path + "immo_panel_com_py.feather")
