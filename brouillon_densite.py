@@ -35,3 +35,22 @@ plt.legend()
 plt.title('Densité de la densité de population en 2014 et 2020 (tronque à 2000) ')
 plt.xlim(0,2000)
 plt.show()
+
+
+#VERIFER PAS COLLER TOUT DE SUITE
+#CARTE REVENU MEDIAN PAR ZONE D'EMPLOI
+
+#Création d'un dataframe avec le revenu médian en 2014 par zone d'emploi pour fair une carte
+P14_POP_by_ZE = control_var.groupby('ZE')['P14_POP'].sum() #population niveau ZE en 2014
+dfQ214 = control_var
+dfQ214["Q214_pondere"] = control_var['Q214'] * control_var["P14_POP"] #multiplie revenu médian par la population
+dfQ214 = dfQ214.groupby('ZE')['Q214_pondere'].sum() 
+dfQ214 = pd.merge(dfQ214,P14_POP_by_ZE,on="ZE")
+dfQ214["Q214_ZE"] = dfQ214["Q214_pondere"]/dfQ214["P14_POP"]
+dfQ214 = dfQ214[["Q214_ZE"]]
+ 
+full_map2 = ze_shp.merge(dfQ214, on="ZE", how="left")
+
+plot_map(full_map2, 
+         'Q214_ZE', "Revenu médian en 2014 par zone d'emploi", 
+         "YlGnBu")
