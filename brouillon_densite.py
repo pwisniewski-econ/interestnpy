@@ -61,15 +61,15 @@ plot_map(full_map2,
 #VERIFIER PAS COLLER TOUT DE SUITE (placer en dessous de la carte juste au dessus)
 #Création d'un dataframe avec l'accès aux soins par zone d'emploi pour faire une carte
 P14_POP_by_ZE = control_var.groupby('ZE')['P14_POP'].sum() #population niveau ZE en 2014
-dfQ214 = control_var
-dfQ214["Physicist_access_pondere"] = control_var['Physicist_access'] * control_var["P14_POP"] #multiplie Physicist_access par la population
-dfQ214 = dfQ214.groupby('ZE')['Physicist_access_pondere'].sum() 
-dfQ214 = pd.merge(dfQ214,P14_POP_by_ZE,on="ZE")
-dfQ214["Physicist_access_ZE"] = dfQ214["Physicist_access_pondere"]/dfQ214["P14_POP"]
-dfQ214 = dfQ214[["Physicist_access_ZE"]]
-dfQ214["Physicist_access_ZE"] = dfQ214["Physicist_access_ZE"].astype(float)
+dfhealth = control_var
+dfhealth["Physicist_access_pondere"] = control_var['Physicist_access'] * control_var["P14_POP"] #multiplie Physicist_access par la population
+dfhealth = dfhealth.groupby('ZE')['Physicist_access_pondere'].sum() 
+dfhealth = pd.merge(dfhealth,P14_POP_by_ZE,on="ZE")
+dfhealth["Physicist_access_ZE"] = dfhealth["Physicist_access_pondere"]/dfhealth["P14_POP"]
+dfhealth = dfhealth[["Physicist_access_ZE"]]
+dfhealth["Physicist_access_ZE"] = dfhealth["Physicist_access_ZE"].astype(float)
  
-full_map3 = ze_shp.merge(dfQ214, on="ZE", how="left")
+full_map3 = ze_shp.merge(dfhealth, on="ZE", how="left")
 
 
 
