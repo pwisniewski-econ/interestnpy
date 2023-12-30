@@ -28,13 +28,10 @@ The primary goal is to analyze the dynamic determinants of municipal real estate
 -   **Python**: The entire project is developed using Python, leveraging its powerful libraries for data analysis, data viz, and econometrics.
 -   **Libraries**: Key Python libraries used include pandas for data manipulation, NumPy for numerical computations, statsmodels and linearmodels for regressions, Matplotlib and Seaborn for data visualization. The project also uses pyarrow to make use of the .feather file format, openpyxl and xlrd to read excel files very commonly used in data from ministries. 
 
-## Structure of the Repository
- `data/`, `src/`, etc..]
-
 ## How to Use
 1.  Clone the repository
-2. Download DVF data for 2014-2023Q1[add-link-to-a-gdrive-or-onedrive-compressed-archive-with-all-data], extract the files and add them to `data/external/DVF`.
-3.  Install required Python packages (see `requirements.txt`)
+2. [Download DVF data for 2014-2023Q1](https://1drv.ms/u/s!AiYfDSSg7esDhJNMMs6ZL9lOATBSFA), extract the files and add them to `data/external/DVF`. If you prefer you can download [the uncompressed DVF data](https://1drv.ms/f/s!AiYfDSSg7esDhJNBwoKJV1DUBHZcVA).
+3.  Install required Python packages (openpyxl, xlrd, pandas, numpy, pyarrow, geopandas, seaborn, matplotlib, statsmodels and linearmodels)
 4.  Explore the notebook in the `root` directory to understand the analysis workflow, the `src/` folder contains scripts that were used to build the notebook. 
 
 ## Contributors
