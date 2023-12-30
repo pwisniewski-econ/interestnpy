@@ -30,7 +30,7 @@ The primary goal is to analyze the dynamic determinants of municipal real estate
 
 ## How to Use
 1.  Clone the repository
-2. [Download DVF data for 2014-2023Q1](https://1drv.ms/u/s!AiYfDSSg7esDhJNMMs6ZL9lOATBSFA), extract the files and add them to `data/external/DVF`. If you prefer you can download [the uncompressed DVF data](https://1drv.ms/f/s!AiYfDSSg7esDhJNBwoKJV1DUBHZcVA).
+2. [Download DVF data for 2014-2023Q1](https://1drv.ms/u/s!AiYfDSSg7esDhJNMMs6ZL9lOATBSFA), extract the files and add them to `data/external/DVF`. Or download [the uncompressed DVF data](https://1drv.ms/f/s!AiYfDSSg7esDhJNBwoKJV1DUBHZcVA).
 3.  Install required Python packages (openpyxl, xlrd, pandas, numpy, pyarrow, geopandas, seaborn, matplotlib, statsmodels and linearmodels)
 4.  Explore the notebook in the `root` directory to understand the analysis workflow, the `src/` folder contains scripts that were used to build the notebook. 
 
