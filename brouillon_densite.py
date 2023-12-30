@@ -37,7 +37,7 @@ plt.xlim(0,2000)
 plt.show()
 
 
-#VERIFER PAS COLLER TOUT DE SUITE
+#VERIFER PAS COLLER TOUT DE SUITE (mettre juste au dessus du tableau définition des variables)
 #CARTE REVENU MEDIAN PAR ZONE D'EMPLOI
 
 #Création d'un dataframe avec le revenu médian en 2014 par zone d'emploi pour fair une carte
