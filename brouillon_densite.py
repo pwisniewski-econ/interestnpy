@@ -58,7 +58,7 @@ plot_map(full_map2,
 
 
 
-
+#VERIFIER PAS COLLER TOUT DE SUITE (placer en dessous de la carte juste au dessus)
 #Création d'un dataframe avec l'accès aux soins par zone d'emploi pour faire une carte
 P14_POP_by_ZE = control_var.groupby('ZE')['P14_POP'].sum() #population niveau ZE en 2014
 dfQ214 = control_var
